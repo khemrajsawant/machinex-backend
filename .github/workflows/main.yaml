@@ -5,12 +5,6 @@ on:
   push:
     branches:
       - "main"
-      - "18-end"
-      - "19-start"
-      - "19-end"
-      - "20-start"
-      - "20-end"
-      - "master"
 
 
 jobs:
