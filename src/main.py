@@ -8,7 +8,9 @@ from src.env import config
 from google.cloud import secretmanager
 
 MODE = config("MODE", cast=str, default="test")
-SERVICE_ACCOUNT_CREDS = config("GOOGLE_CREDENTIALS", default="{}")
+import json
+
+SERVICE_ACCOUNT_CREDS = json.loads(config("GOOGLE_CREDENTIALS", default="{}"))
 
 # with open("service_account.json", "w") as f:
 #     f.write(SERVICE_ACCOUNT_CREDS)
