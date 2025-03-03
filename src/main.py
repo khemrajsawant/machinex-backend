@@ -6,7 +6,7 @@ import gspread
 import pandas as pd
 from src.env import config
 from google.cloud import secretmanager
-
+import json
 MODE = config("MODE", cast=str, default="test")
 
 
@@ -21,7 +21,7 @@ app = FastAPI()
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 def authenticate_google_sheets():
-    return gspread.service_account_from_dict(SERVICE_ACCOUNT_CREDS)
+    return gspread.service_account_from_dict(json.loads(SERVICE_ACCOUNT_CREDS))
 
 def get_worksheet_data(sh, worksheet_index, ranges):
     """Get data from specified ranges in a worksheet."""
