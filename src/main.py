@@ -1,30 +1,17 @@
 import os
 from fastapi import FastAPI
-from src.env import config
-
-import os
+from fastapi.responses import JSONResponse
+from pathlib import Path
 import gspread
 import pandas as pd
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from src.env import config
+from google.cloud import secretmanager
 
-
-MODE=config("MODE", cast=str, default="test")
-
+MODE = config("MODE", cast=str, default="test")
 SERVICE_ACCOUNT_CREDS = config("GOOGLE_CREDENTIALS", default="{}")
-with open("service_account.json", "w") as f:
-    f.write(SERVICE_ACCOUNT_CREDS)
 
-app = FastAPI() 
-
-@app.get("/") # GET -> HTTP METHOD
-def home_page():
-    # for API services
-    # JSON-ready dict -> json.dumps({'hello': 'world'})
-    return {"Hello": "World", "mode": MODE}
-
-
-
+# with open("service_account.json", "w") as f:
+#     f.write(SERVICE_ACCOUNT_CREDS)
 
 app = FastAPI()
 
@@ -32,8 +19,7 @@ app = FastAPI()
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 def authenticate_google_sheets():
-    """Authenticate and create a client to interact with the Google Sheets API."""
-    return gspread.service_account(filename='service_account.json')
+    return gspread.service_account_from_dict(SERVICE_ACCOUNT_CREDS)
 
 def get_worksheet_data(sh, worksheet_index, ranges):
     """Get data from specified ranges in a worksheet."""
@@ -47,20 +33,19 @@ def list_to_dataframe(data):
     else:
         return pd.DataFrame()
 
+@app.get("/")
+def home_page():
+    return {"Hello": "World", "mode": MODE}
+
 @app.get("/get-data")
 def get_data():
-    # Authenticate and create a client to interact with the Google Sheets API
     gc = authenticate_google_sheets()
-
-    # Open the Google Sheet by its key
     sh = gc.open_by_key("10cCshBXUSnu5hHUvnc5CPCrJOeZlZaMtHPaZOx2M950")
 
-    # Get data from worksheets
     raw_ref_main = get_worksheet_data(sh, 0, ['B7:I22', 'K7:O8', 'Q7:T13'])
     raw_ref_main_test = get_worksheet_data(sh, 10, ['A1:G2'])
     raw_ref = get_worksheet_data(sh, 1, ['B2:C7', 'E2:F9', 'H2:P53', 'R2:S28', 'U2:V7', 'X2:Z6'])
 
-    # Convert raw data to DataFrames
     df_Keyway_Description = list_to_dataframe(raw_ref[0])
     df_Thard_Operations = list_to_dataframe(raw_ref[1])
     df_ops_metadata = list_to_dataframe(raw_ref[2])
@@ -73,7 +58,6 @@ def get_data():
     df_main_keyway_description = list_to_dataframe(raw_ref_main[1])
     df_main_finish_description = list_to_dataframe(raw_ref_main[2])
 
-    # Get data from additional worksheets
     worksheet_drawing = sh.get_worksheet(2)
     df_main_drawing = pd.DataFrame(worksheet_drawing.get_all_records())
 
@@ -90,7 +74,6 @@ def get_data():
     raw_ref_calc = worksheet_calc.batch_get(['CE7:CJ29'])
     df_main_calc = list_to_dataframe(raw_ref_calc[0])
 
-    # Combine all data into a dictionary
     data = {
         "df_main": df_main.to_dict(orient="records"),
         "df_main_step_description": df_main_step_description.to_dict(orient="records"),
@@ -110,9 +93,3 @@ def get_data():
     }
 
     return JSONResponse(content=data)
-
-# @app.post("/") # POST -> HTTP METHOD
-# def home_handle_data_page():
-#     # for API services
-#     # JSON-ready dict -> json.dumps({'hello': 'world'})
-#     return {"Hello": "World"}
