@@ -41,7 +41,7 @@ class RepositoryString(RepositoryEmpty):
         """
         Take a string source with the dotenv file format:
 
-        KEY=value
+        KEY=value /
 
         Then parse it into a dictionary
         """
