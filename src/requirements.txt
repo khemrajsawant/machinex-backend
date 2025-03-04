@@ -6,5 +6,5 @@ pytest
 httpx
 google-auth
 google-cloud-secret-manager
-gspread
+gspread==5.12.4
 pandas
