@@ -1,4 +1,6 @@
 # import google-auth
+
+import json
 import google.auth
 try:
     _, project_id = google.auth.default()
@@ -11,7 +13,6 @@ if project_id is not None:
     # import google-cloud-secret-manager
     from google.cloud import secretmanager
 
-
     client = secretmanager.SecretManagerServiceClient()
     # my_secret_file is the name of the secret you
     # set with `gcloud secrets create ....`
@@ -19,10 +20,13 @@ if project_id is not None:
 
     # project_id comes from previous step
     gcloud_secret_name = f"projects/{project_id}/secrets/{secret_label}/versions/latest"
-
+    gcloud_secret_name = f"projects/{project_id}/secrets/GOOGLE_CREDENTIALS/versions/latest"
     # this should print the contents of your secret
     payload = client.access_secret_version(name=gcloud_secret_name).payload.data.decode("UTF-8")
 
     # print the contents
+    print(json.loads(payload))
+    print(type(json.loads(payload)))
+    payload.to_dict()
     print(payload)
-    print(payload.get("MODE"))
+    # print(payload.get("MODE"))

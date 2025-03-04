@@ -9,11 +9,25 @@ from google.cloud import secretmanager
 import json
 MODE = config("MODE", cast=str, default="test")
 
+import json
+import google.auth
+try:
+    _, project_id = google.auth.default()
+except google.auth.exceptions.DefaultCredentialsError:
+    project_id = None
+print(project_id)
 
-SERVICE_ACCOUNT_CREDS = config("GOOGLE_CREDENTIALS", default="{}")
 
-# with open("service_account.json", "w") as f:
-#     f.write(SERVICE_ACCOUNT_CREDS)
+if project_id is not None:
+    # import google-cloud-secret-manager
+    from google.cloud import secretmanager
+
+    client = secretmanager.SecretManagerServiceClient()
+
+    gcloud_secret_name = f"projects/{project_id}/secrets/GOOGLE_CREDENTIALS/versions/latest"
+    # this should print the contents of your secret
+    SERVICE_ACCOUNT_CREDS = json.loads(client.access_secret_version(name=gcloud_secret_name).payload.data.decode("UTF-8"))
+
 
 app = FastAPI()
 
@@ -21,7 +35,7 @@ app = FastAPI()
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 def authenticate_google_sheets():
-    return gspread.service_account_from_dict(json.loads(SERVICE_ACCOUNT_CREDS))
+    return gspread.service_account_from_dict(SERVICE_ACCOUNT_CREDS)
 
 def get_worksheet_data(sh, worksheet_index, ranges):
     """Get data from specified ranges in a worksheet."""
