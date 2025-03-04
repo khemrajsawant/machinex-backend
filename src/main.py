@@ -42,6 +42,14 @@ def get_worksheet_data(sh, worksheet_index, ranges):
     worksheet = sh.get_worksheet(worksheet_index)
     return worksheet.batch_get(ranges)
 
+
+def update_worksheet_data(sh, worksheet_index, dataframe, range, columns=None):
+    """Update data in a worksheet."""
+    worksheet = sh.get_worksheet(worksheet_index)
+    if columns:
+        dataframe = dataframe[columns]
+    worksheet.update([dataframe.columns.values.tolist()] + dataframe.values.tolist(), range)
+
 def list_to_dataframe(data):
     """Convert list of lists to DataFrame with the first list as column headers."""
     if data:
@@ -52,6 +60,33 @@ def list_to_dataframe(data):
 @app.get("/")
 def home_page():
     return {"Hello": "World", "mode": MODE}
+
+@app.post("/update-worksheet")
+def update_worksheet(data: dict):
+    gc = authenticate_google_sheets()
+    sh = gc.open_by_key("10cCshBXUSnu5hHUvnc5CPCrJOeZlZaMtHPaZOx2M950")
+    
+    worksheet_index = data.get("worksheet_index")
+    range = data.get("range")
+    dataframe = pd.DataFrame(data.get("data"),columns=["Header1", "Header2","Header3"])
+    columns = data.get("columns", None)
+    
+    update_worksheet_data(sh, worksheet_index, dataframe, range, columns )
+    
+    return {"status": "success"}
+
+@app.get("/mock-data")
+def mock_data():
+    data = {
+        "worksheet_index": 12,
+        "range": "A1:C2",
+        "data": [
+            ["Header1", "Header2", "Header3"],
+            ["Value1", "Value2", "Value3"]
+        ],
+        "columns": ["Header1", "Header2"]
+    }
+    return JSONResponse(content=data)
 
 @app.get("/get-data")
 def get_data():
