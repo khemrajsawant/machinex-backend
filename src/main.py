@@ -78,7 +78,7 @@ def update_worksheet(data: dict):
 @app.get("/mock-data")
 def mock_data():
     data = {
-        "worksheet_index": 12,
+        "worksheet_index": 11,
         "range": "A1:C2",
         "data": [
             ["Header1", "Header2", "Header3"],
